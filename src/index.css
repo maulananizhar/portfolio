@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-bg: var(--theme-bg);
+  --color-surface: var(--theme-surface);
+  --color-surface-alt: var(--theme-surface-alt);
+  --color-surface-hover: var(--theme-surface-hover);
+  --color-accent: var(--theme-accent);
+  --color-accent-dim: var(--theme-accent-dim);
+  --color-accent-subtle: var(--theme-accent-subtle);
+  --color-text: var(--theme-text);
+  --color-text-secondary: var(--theme-text-secondary);
+  --color-text-tertiary: var(--theme-text-tertiary);
+  --color-border: var(--theme-border);
+  --color-border-light: var(--theme-border-light);
+  --color-status-active: var(--theme-status-active);
+  --color-status-idle: var(--theme-status-idle);
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'JetBrains Mono', monospace;
+}
+
+:root {
+  --theme-bg: #F4F6F8;
+  --theme-surface: #FFFFFF;
+  --theme-surface-alt: #EAECEF;
+  --theme-surface-hover: #E2E5E9;
+  --theme-accent: #0E7490;
+  --theme-accent-dim: rgba(14, 116, 144, 0.25);
+  --theme-accent-subtle: rgba(14, 116, 144, 0.08);
+  --theme-text: #1D1F28;
+  --theme-text-secondary: rgba(29, 31, 40, 0.55);
+  --theme-text-tertiary: rgba(29, 31, 40, 0.35);
+  --theme-border: rgba(14, 116, 144, 0.2);
+  --theme-border-light: rgba(14, 116, 144, 0.1);
+  --theme-status-active: #22C55E;
+  --theme-status-idle: #F59E0B;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --theme-bg: #1D1F28;
+    --theme-surface: #252733;
+    --theme-surface-alt: #2A2D3A;
+    --theme-surface-hover: #2E3140;
+    --theme-accent: #0E7490;
+    --theme-accent-dim: rgba(14, 116, 144, 0.3);
+    --theme-accent-subtle: rgba(14, 116, 144, 0.1);
+    --theme-text: #FFFFFF;
+    --theme-text-secondary: rgba(255, 255, 255, 0.55);
+    --theme-text-tertiary: rgba(255, 255, 255, 0.35);
+    --theme-border: rgba(14, 116, 144, 0.25);
+    --theme-border-light: rgba(14, 116, 144, 0.12);
+    --theme-status-active: #22C55E;
+    --theme-status-idle: #F59E0B;
+  }
+}
+
+:root.dark {
+  --theme-bg: #1D1F28;
+  --theme-surface: #252733;
+  --theme-surface-alt: #2A2D3A;
+  --theme-surface-hover: #2E3140;
+  --theme-accent: #0E7490;
+  --theme-accent-dim: rgba(14, 116, 144, 0.3);
+  --theme-accent-subtle: rgba(14, 116, 144, 0.1);
+  --theme-text: #FFFFFF;
+  --theme-text-secondary: rgba(255, 255, 255, 0.55);
+  --theme-text-tertiary: rgba(255, 255, 255, 0.35);
+  --theme-border: rgba(14, 116, 144, 0.25);
+  --theme-border-light: rgba(14, 116, 144, 0.12);
+  --theme-status-active: #22C55E;
+  --theme-status-idle: #F59E0B;
+}
+
+@layer base {
+  html {
+    font-family: 'JetBrains Mono', monospace;
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::selection {
+    background-color: var(--color-accent-dim);
+    color: var(--color-text);
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-accent-dim);
+  }
+}
+
+/* Dark mode prose overrides */
+.dark .prose.prose-custom,
+:root:not(.light) .prose.prose-custom {
+  --tw-prose-body: rgba(255, 255, 255, 0.87);
+  --tw-prose-headings: #ffffff;
+  --tw-prose-links: #0E7490;
+  --tw-prose-bold: #ffffff;
+  --tw-prose-counters: rgba(255, 255, 255, 0.55);
+  --tw-prose-bullets: rgba(255, 255, 255, 0.55);
+  --tw-prose-hr: rgba(14, 116, 144, 0.2);
+  --tw-prose-quotes: rgba(255, 255, 255, 0.87);
+  --tw-prose-quote-borders: #0E7490;
+  --tw-prose-captions: rgba(255, 255, 255, 0.45);
+  --tw-prose-code: #0E7490;
+  --tw-prose-code-bg: rgba(14, 116, 144, 0.1);
+  --tw-prose-pre-code: rgba(255, 255, 255, 0.85);
+  --tw-prose-pre-bg: #252733;
+  --tw-prose-th-borders: rgba(14, 116, 144, 0.25);
+  --tw-prose-td-borders: rgba(14, 116, 144, 0.15);
+}
+
+.dark .prose-custom,
+:root:not(.light) .prose-custom {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.dark .prose-custom h1,
+.dark .prose-custom h2,
+.dark .prose-custom h3,
+.dark .prose-custom h4,
+:root:not(.light) .prose-custom h1,
+:root:not(.light) .prose-custom h2,
+:root:not(.light) .prose-custom h3,
+:root:not(.light) .prose-custom h4 {
+  color: #ffffff;
+}
+
+.dark .prose-custom strong,
+:root:not(.light) .prose-custom strong {
+  color: #ffffff;
+}
+
+.dark .prose-custom code,
+:root:not(.light) .prose-custom code {
+  color: #0E7490;
+}
+
+.dark .prose-custom a,
+:root:not(.light) .prose-custom a {
+  color: #0E7490;
+}

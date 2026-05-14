@@ -1,0 +1,20 @@
+import Card from '../ui/Card'
+import StatusDot from '../ui/StatusDot'
+import type { SetupItem } from '../../types'
+
+interface DevToolsCardProps {
+  item: SetupItem
+}
+
+export default function DevToolsCard({ item }: DevToolsCardProps) {
+  return (
+    <Card className="p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <StatusDot active />
+        <span className="text-xs font-bold text-text">{item.name}</span>
+      </div>
+      <p className="text-[11px] text-text-secondary mb-1">{item.specs}</p>
+      <p className="text-xs text-text-tertiary">{item.description}</p>
+    </Card>
+  )
+}

@@ -1,0 +1,104 @@
+export const frontmatter = {
+  title: 'Building Scalable APIs with TypeScript and NestJS',
+  date: '2026-03-15',
+  excerpt: 'A deep dive into architecting production-grade REST APIs using NestJS, TypeScript, and PostgreSQL. Covering modular design, dependency injection, and testing strategies.',
+  thumbnail: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  tags: ['TypeScript', 'NestJS', 'API', 'Backend'],
+}
+
+## Building Scalable APIs with TypeScript and NestJS
+
+When I started building production APIs, I quickly realized that structure matters as much as functionality. NestJS provides the architectural patterns that keep large codebases maintainable.
+
+### Why NestJS?
+
+NestJS brings Angular-inspired modularity to the Node.js ecosystem. Modules, controllers, providers, and middleware are first-class citizens. This structure scales naturally from a single service to a microservice architecture.
+
+### Modular Architecture
+
+A well-designed NestJS application is organized into feature modules:
+
+```typescript
+@Module({
+  imports: [DatabaseModule, LoggerModule],
+  controllers: [UsersController],
+  providers: [UsersService, UsersRepository],
+  exports: [UsersService],
+})
+export class UsersModule {}
+```
+
+Each module encapsulates its domain logic. Controllers handle HTTP concerns, services contain business logic, and repositories abstract data access.
+
+### Dependency Injection
+
+NestJS's DI container makes testing and substitution effortless:
+
+```typescript
+@Injectable()
+export class UsersService {
+  constructor(
+    private readonly repository: UsersRepository,
+    @Inject('CACHE') private readonly cache: CacheService,
+  ) {}
+}
+```
+
+### Validation and DTOs
+
+Use class-validator and class-transformer for request validation:
+
+```typescript
+export class CreateUserDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  password: string;
+
+  @IsOptional()
+  @IsString()
+  displayName?: string;
+}
+```
+
+### Database Integration with Prisma
+
+Prisma provides type-safe database access that pairs perfectly with TypeScript:
+
+```typescript
+@Injectable()
+export class UsersRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { email } });
+  }
+}
+```
+
+### Testing Strategy
+
+Unit tests for services, e2e tests for controllers, and integration tests for database operations:
+
+```typescript
+describe('UsersService', () => {
+  let service: UsersService;
+  let repository: MockUsersRepository;
+
+  beforeEach(async () => {
+    repository = new MockUsersRepository();
+    service = new UsersService(repository);
+  });
+
+  it('should create a user', async () => {
+    const user = await service.create({ email: 'test@test.com' });
+    expect(user.email).toBe('test@test.com');
+  });
+});
+```
+
+### Conclusion
+
+NestJS provides the structure that enterprise applications need without sacrificing developer experience. Combined with TypeScript, Prisma, and a solid testing strategy, you can build APIs that are both scalable and maintainable.

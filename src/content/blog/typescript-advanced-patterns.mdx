@@ -1,0 +1,94 @@
+export const frontmatter = {
+  title: 'Advanced TypeScript Patterns for Real-World Applications',
+  date: '2026-02-20',
+  excerpt: 'Exploring practical TypeScript patterns including discriminated unions, template literal types, branded types, and the builder pattern for type-safe API clients.',
+  thumbnail: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=1506&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  tags: ['TypeScript', 'Patterns', 'Frontend', 'Backend'],
+}
+
+## Advanced TypeScript Patterns for Real-World Applications
+
+TypeScript's type system is incredibly powerful. Beyond basic interfaces and generics, there are patterns that make your code safer and more expressive.
+
+### Discriminated Unions
+
+One of the most practical patterns for handling different states:
+
+```typescript
+type Result<T, E> =
+  | { success: true; data: T }
+  | { success: false; error: E };
+
+function handleResult(result: Result<User, ApiError>) {
+  if (result.success) {
+    console.log(result.data.name); // typed as User
+  } else {
+    console.error(result.error.message); // typed as ApiError
+  }
+}
+```
+
+### Template Literal Types
+
+Create precise string types from unions:
+
+```typescript
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type ApiVersion = 'v1' | 'v2';
+type Endpoint = `/${ApiVersion}/${Lowercase<HttpMethod>}`;
+
+// '/v1/get' | '/v1/post' | ... | '/v2/delete'
+```
+
+### Branded Types
+
+Prevent mixing up primitive values that represent different concepts:
+
+```typescript
+type UserId = string & { readonly __brand: 'UserId' };
+type OrderId = string & { readonly __brand: 'OrderId' };
+
+function createUserId(id: string): UserId {
+  return id as UserId;
+}
+
+function getUser(id: UserId): User { /* ... */ }
+// getUser(orderId) // Type error!
+```
+
+### Builder Pattern with Types
+
+Type-safe builder that guides the developer through the correct construction sequence:
+
+```typescript
+class QueryBuilder<T extends Record<string, unknown>> {
+  private conditions: string[] = [];
+
+  where<K extends keyof T & string>(
+    field: K,
+    value: T[K]
+  ): this {
+    this.conditions.push(`${field} = '${value}'`);
+    return this;
+  }
+
+  build(): string {
+    return `SELECT * FROM ${this.tableName} WHERE ${this.conditions.join(' AND ')}`;
+  }
+}
+```
+
+### Conditional Types for API Responses
+
+```typescript
+type ApiResponse<T> = T extends Array<infer U>
+  ? { items: U[]; total: number }
+  : { data: T };
+
+// ApiResponse<User[]> => { items: User[]; total: number }
+// ApiResponse<User> => { data: User }
+```
+
+### Conclusion
+
+These patterns have made my TypeScript code significantly safer and more expressive. The key is knowing when to apply each one — over-engineering type safety can reduce readability. Use discriminated unions for state management, branded types for domain primitives, and template literals for string validation.
