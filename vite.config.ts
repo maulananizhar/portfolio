@@ -4,6 +4,8 @@ import mdx from '@mdx-js/rollup'
 import tailwindcss from '@tailwindcss/vite'
 import rehypeShiki from '@shikijs/rehype'
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 function toBase64(str: string): string {
   return Buffer.from(str).toString('base64')
 }
@@ -12,18 +14,14 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
-    plugins: [
-      {
-        enforce: 'pre',
-        ...mdx({
-          rehypePlugins: [
-            [rehypeShiki, { theme: 'github-dark' }],
-          ],
-        }),
-      },
-      react({ include: /\.(mdx|tsx|ts|js)$/ }),
-      tailwindcss(),
-    ],
+    plugins: [{
+      enforce: 'pre',
+      ...mdx({
+        rehypePlugins: [
+          [rehypeShiki, { theme: 'github-dark' }],
+        ],
+      }),
+    }, react({ include: /\.(mdx|tsx|ts|js)$/ }), tailwindcss(), cloudflare()],
     server: {
       proxy: {
         '/api/gitlab': {
@@ -52,5 +50,5 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-  }
+  };
 })
