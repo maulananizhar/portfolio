@@ -11,12 +11,19 @@ function encodeBase64(value: string): string {
   return btoa(value)
 }
 
-function requireBinding(value: string | undefined, name: string): string {
-  if (!value) {
-    throw new Error(`${name} is not configured in Cloudflare runtime secrets/variables`)
-  }
+function requireBinding(value: string | undefined): string | null {
+  return value && value.trim() ? value : null
+}
 
-  return value
+function missingBindingResponse(name: string): Response {
+  return new Response(JSON.stringify({
+    error: `${name} is not configured in Cloudflare runtime secrets/variables`,
+  }), {
+    status: 500,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+    },
+  })
 }
 
 function createUpstreamRequest(
@@ -37,12 +44,24 @@ async function proxyRequest(
   pathPrefix: string,
   headers: Headers,
 ): Promise<Response> {
-  const url = new URL(request.url)
-  const path = url.pathname.slice(pathPrefix.length) || '/'
-  const upstream = new URL(`${upstreamBase}${path}`)
-  upstream.search = url.search
+  try {
+    const url = new URL(request.url)
+    const path = url.pathname.slice(pathPrefix.length) || '/'
+    const upstream = new URL(`${upstreamBase}${path}`)
+    upstream.search = url.search
 
-  return fetch(createUpstreamRequest(request, upstream, headers))
+    return await fetch(createUpstreamRequest(request, upstream, headers))
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: 'Proxy request failed',
+      detail: error instanceof Error ? error.message : 'Unknown error',
+    }), {
+      status: 500,
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+      },
+    })
+  }
 }
 
 export default {
@@ -51,7 +70,10 @@ export default {
 
     if (url.pathname.startsWith('/api/github')) {
       const headers = new Headers(request.headers)
-      headers.set('Authorization', `Bearer ${requireBinding(env.GITHUB_ACCESS_TOKEN, 'GITHUB_ACCESS_TOKEN')}`)
+      const githubToken = requireBinding(env.GITHUB_ACCESS_TOKEN)
+      if (!githubToken) return missingBindingResponse('GITHUB_ACCESS_TOKEN')
+
+      headers.set('Authorization', `Bearer ${githubToken}`)
       headers.set('User-Agent', 'portfolio')
 
       return proxyRequest(request, 'https://api.github.com', '/api/github', headers)
@@ -59,14 +81,19 @@ export default {
 
     if (url.pathname.startsWith('/api/gitlab')) {
       const headers = new Headers(request.headers)
-      headers.set('PRIVATE-TOKEN', requireBinding(env.GITLAB_ACCESS_TOKEN, 'GITLAB_ACCESS_TOKEN'))
+      const gitlabToken = requireBinding(env.GITLAB_ACCESS_TOKEN)
+      if (!gitlabToken) return missingBindingResponse('GITLAB_ACCESS_TOKEN')
+
+      headers.set('PRIVATE-TOKEN', gitlabToken)
 
       return proxyRequest(request, 'https://gitlab.com/api/v4', '/api/gitlab', headers)
     }
 
     if (url.pathname.startsWith('/api/wakatime')) {
       const headers = new Headers(request.headers)
-      const wakatimeApiKey = requireBinding(env.WAKATIME_API_KEY, 'WAKATIME_API_KEY')
+      const wakatimeApiKey = requireBinding(env.WAKATIME_API_KEY)
+      if (!wakatimeApiKey) return missingBindingResponse('WAKATIME_API_KEY')
+
       headers.set('Authorization', `Basic ${encodeBase64(`${wakatimeApiKey}:`)}`)
 
       return proxyRequest(request, 'https://wakatime.com/api/v1', '/api/wakatime', headers)
