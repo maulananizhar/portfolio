@@ -2,6 +2,7 @@ import axios from 'axios'
 import type { ContributionDay } from '../types'
 
 const GITLAB_USERNAME = 'maulananizhar'
+const GITHUB_USERNAME = 'maulananizhar'
 
 export interface CodingStatsResult {
   codingHours: string
@@ -57,6 +58,45 @@ async function fetchGitLabEvents(userId: number, after: string): Promise<GitLabE
   return events
 }
 
+interface GitHubDay {
+  date: string
+  contributionCount: number
+}
+
+interface GitHubWeek {
+  contributionDays: GitHubDay[]
+}
+
+async function fetchGitHubContributions(since: string, until: string): Promise<GitHubDay[]> {
+  const query = `
+    query($username: String!, $from: DateTime!, $to: DateTime!) {
+      user(login: $username) {
+        contributionsCollection(from: $from, to: $to) {
+          contributionCalendar {
+            weeks {
+              contributionDays {
+                date
+                contributionCount
+              }
+            }
+          }
+        }
+      }
+    }
+  `
+  const { data } = await axios.post('/api/github/graphql', {
+    query,
+    variables: {
+      username: GITHUB_USERNAME,
+      from: `${since}T00:00:00Z`,
+      to: `${until}T23:59:59Z`,
+    },
+  })
+
+  const weeks: GitHubWeek[] = data?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || []
+  return weeks.flatMap(w => w.contributionDays)
+}
+
 async function fetchWakaTime() {
   const { data } = await axios.get('/api/wakatime/users/current/stats/last_year')
   return data.data
@@ -92,29 +132,37 @@ export async function fetchCodingStats(): Promise<CodingStatsResult> {
     // WakaTime not configured
   }
 
+  const dailyMap = new Map<string, number>()
+
   try {
     const user = await fetchGitLabUser()
     const events = await fetchGitLabEvents(user.id, after)
 
-    let totalCommits = 0
-    const dailyMap = new Map<string, number>()
-
     for (const event of events) {
       const date = event.created_at?.split('T')[0]
-      const count = event.push_data?.commit_count || 1
       if (date) {
-        totalCommits += count
-        dailyMap.set(date, (dailyMap.get(date) || 0) + count)
+        dailyMap.set(date, (dailyMap.get(date) || 0) + 1)
       }
     }
-
-    result.commits = totalCommits.toLocaleString()
-    result.contributions = Array.from(dailyMap.entries())
-      .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => a.date.localeCompare(b.date))
   } catch {
     // GitLab API failed
   }
+
+  try {
+    const todayStr = new Date().toISOString().split('T')[0]
+    const ghDays = await fetchGitHubContributions(after, todayStr)
+    for (const day of ghDays) {
+      dailyMap.set(day.date, (dailyMap.get(day.date) || 0) + day.contributionCount)
+    }
+  } catch {
+    // GitHub API failed
+  }
+
+  const totalCommits = Array.from(dailyMap.values()).reduce((sum, c) => sum + c, 0)
+  result.commits = totalCommits.toLocaleString()
+  result.contributions = Array.from(dailyMap.entries())
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date))
 
   return result
 }

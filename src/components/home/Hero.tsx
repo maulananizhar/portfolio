@@ -1,4 +1,4 @@
-import { ArrowUpRight, Mail } from 'lucide-react'
+import { ArrowUpRight, Mail, Download } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../ui/Button'
 import StatusDot from '../ui/StatusDot'
@@ -34,6 +34,10 @@ export default function Hero() {
             <Button variant="outline" onClick={() => window.location.href = `mailto:${profile.email}`}>
               <Mail size={14} />
               <span>Contact</span>
+            </Button>
+            <Button variant="outline" href="https://drive.google.com/uc?export=download&id=1xPg8kuwNSfiDRXWexc-5PfAAWqHfy9Pn">
+              <Download size={14} />
+              <span>Download CV</span>
             </Button>
           </div>
         </div>

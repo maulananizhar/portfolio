@@ -42,6 +42,14 @@ export default defineConfig(({ mode }) => {
             'Authorization': `Basic ${toBase64(`${env.WAKATIME_API_KEY}:`)}`,
           },
         },
+        '/api/github': {
+          target: 'https://api.github.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/github/, ''),
+          headers: {
+            'Authorization': `Bearer ${env.GITHUB_ACCESS_TOKEN}`,
+          },
+        },
       },
     },
   }

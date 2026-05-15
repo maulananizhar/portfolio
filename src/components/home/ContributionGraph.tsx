@@ -50,16 +50,15 @@ export default function ContributionGraph({ data }: Props) {
   }
 
   const today = new Date()
-  const daysSinceSunday = today.getDay() // 0 = Sun
   const lastSunday = new Date(today)
-  lastSunday.setDate(lastSunday.getDate() - daysSinceSunday)
+  lastSunday.setDate(lastSunday.getDate() - today.getDay())
 
   const startDate = new Date(lastSunday)
-  startDate.setDate(startDate.getDate() - (52 * 7 - 1))
+  startDate.setDate(startDate.getDate() - 52 * 7)
 
   const rawDays: { date: string; count: number }[] = []
   const cursor = new Date(startDate)
-  while (cursor <= lastSunday) {
+  for (let i = 0; i < 52 * 7; i++) {
     const key = cursor.toISOString().slice(0, 10)
     rawDays.push({ date: key, count: countMap.get(key) || 0 })
     cursor.setDate(cursor.getDate() + 1)
