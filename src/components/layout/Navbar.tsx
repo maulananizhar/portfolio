@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { Terminal } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
+import AccentColorPicker from './AccentColorPicker'
 
 const tabs = [
   { label: 'Home', path: '/' },
@@ -40,6 +41,7 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <AccentColorPicker />
           <ThemeToggle />
           <button className="md:hidden border border-border-light p-2 text-text-secondary cursor-pointer">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">

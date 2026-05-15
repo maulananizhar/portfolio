@@ -105,20 +105,20 @@
 :root:not(.light) .prose.prose-custom {
   --tw-prose-body: rgba(255, 255, 255, 0.87);
   --tw-prose-headings: #ffffff;
-  --tw-prose-links: #0E7490;
+  --tw-prose-links: var(--theme-accent);
   --tw-prose-bold: #ffffff;
   --tw-prose-counters: rgba(255, 255, 255, 0.55);
   --tw-prose-bullets: rgba(255, 255, 255, 0.55);
-  --tw-prose-hr: rgba(14, 116, 144, 0.2);
+  --tw-prose-hr: var(--theme-border);
   --tw-prose-quotes: rgba(255, 255, 255, 0.87);
-  --tw-prose-quote-borders: #0E7490;
+  --tw-prose-quote-borders: var(--theme-accent);
   --tw-prose-captions: rgba(255, 255, 255, 0.45);
-  --tw-prose-code: #0E7490;
-  --tw-prose-code-bg: rgba(14, 116, 144, 0.1);
+  --tw-prose-code: var(--theme-accent);
+  --tw-prose-code-bg: var(--theme-accent-subtle);
   --tw-prose-pre-code: rgba(255, 255, 255, 0.85);
   --tw-prose-pre-bg: #252733;
-  --tw-prose-th-borders: rgba(14, 116, 144, 0.25);
-  --tw-prose-td-borders: rgba(14, 116, 144, 0.15);
+  --tw-prose-th-borders: var(--theme-border);
+  --tw-prose-td-borders: var(--theme-border-light);
 }
 
 .dark .prose-custom,
@@ -144,10 +144,26 @@
 
 .dark .prose-custom code,
 :root:not(.light) .prose-custom code {
-  color: #0E7490;
+  color: var(--theme-accent);
 }
 
 .dark .prose-custom a,
 :root:not(.light) .prose-custom a {
-  color: #0E7490;
+  color: var(--theme-accent);
 }
+
+/* Smooth transitions for theme & accent changes */
+* {
+  transition: background-color 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+
