@@ -1,4 +1,4 @@
-import axios from 'axios'
+import api from '../lib/api'
 import type { ContributionDay } from '../types'
 
 const GITLAB_USERNAME = 'maulananizhar'
@@ -28,7 +28,7 @@ interface GitLabEvent {
 }
 
 async function fetchGitLabUser(): Promise<GitLabUser> {
-  const { data } = await axios.get('/api/gitlab/users', {
+  const { data } = await api.get('/api/gitlab/users', {
     params: { username: GITLAB_USERNAME },
   })
   if (!data?.length) throw new Error('GitLab user not found')
@@ -36,7 +36,7 @@ async function fetchGitLabUser(): Promise<GitLabUser> {
 }
 
 async function fetchGitLabEvents(userId: number, after: string): Promise<GitLabEvent[]> {
-  const first = await axios.get(`/api/gitlab/users/${userId}/events`, {
+  const first = await api.get(`/api/gitlab/users/${userId}/events`, {
     params: { action: 'pushed', per_page: 100, page: 1, after },
   })
 
@@ -47,7 +47,7 @@ async function fetchGitLabEvents(userId: number, after: string): Promise<GitLabE
     const pages = Array.from({ length: totalPages - 1 }, (_, i) => i + 2)
     const remaining = await Promise.all(
       pages.map(page =>
-        axios.get(`/api/gitlab/users/${userId}/events`, {
+        api.get(`/api/gitlab/users/${userId}/events`, {
           params: { action: 'pushed', per_page: 100, page, after },
         })
       )
@@ -84,7 +84,7 @@ async function fetchGitHubContributions(since: string, until: string): Promise<G
       }
     }
   `
-  const { data } = await axios.post('/api/github/graphql', {
+  const { data } = await api.post('/api/github/graphql', {
     query,
     variables: {
       username: GITHUB_USERNAME,
@@ -98,7 +98,7 @@ async function fetchGitHubContributions(since: string, until: string): Promise<G
 }
 
 async function fetchWakaTime() {
-  const { data } = await axios.get('/api/wakatime/users/current/stats/last_year')
+  const { data } = await api.get('/api/wakatime/users/current/stats/last_year')
   return data.data
 }
 

@@ -2,7 +2,7 @@ import type { ProfileData } from '../types'
 
 export const profile: ProfileData = {
   name: 'Muhammad Nizhar Rizqi Maulana',
-  role: 'Web Developer',
+  role: 'Software Engineer',
   location: 'Depok, Jawa Barat, Indonesia',
   email: 'maulananizhar27@gmail.com',
   github: 'https://github.com/maulananizhar',
