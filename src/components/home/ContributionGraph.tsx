@@ -17,6 +17,13 @@ function getIntensity(count: number): string {
   return 'bg-accent'
 }
 
+function localDateStr(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export default function ContributionGraph({ data }: Props) {
   const [tooltip, setTooltip] = useState<{
     show: boolean
@@ -59,7 +66,7 @@ export default function ContributionGraph({ data }: Props) {
   const rawDays: { date: string; count: number }[] = []
   const cursor = new Date(startDate)
   for (let i = 0; i < 52 * 7; i++) {
-    const key = cursor.toISOString().slice(0, 10)
+    const key = localDateStr(cursor)
     rawDays.push({ date: key, count: countMap.get(key) || 0 })
     cursor.setDate(cursor.getDate() + 1)
   }
