@@ -11,6 +11,14 @@ function encodeBase64(value: string): string {
   return btoa(value)
 }
 
+function requireBinding(value: string | undefined, name: string): string {
+  if (!value) {
+    throw new Error(`${name} is not configured in Cloudflare runtime secrets/variables`)
+  }
+
+  return value
+}
+
 function createUpstreamRequest(
   request: Request,
   upstreamUrl: URL,
@@ -43,7 +51,7 @@ export default {
 
     if (url.pathname.startsWith('/api/github')) {
       const headers = new Headers(request.headers)
-      headers.set('Authorization', `Bearer ${env.GITHUB_ACCESS_TOKEN}`)
+      headers.set('Authorization', `Bearer ${requireBinding(env.GITHUB_ACCESS_TOKEN, 'GITHUB_ACCESS_TOKEN')}`)
       headers.set('User-Agent', 'portfolio')
 
       return proxyRequest(request, 'https://api.github.com', '/api/github', headers)
@@ -51,14 +59,15 @@ export default {
 
     if (url.pathname.startsWith('/api/gitlab')) {
       const headers = new Headers(request.headers)
-      headers.set('PRIVATE-TOKEN', env.GITLAB_ACCESS_TOKEN)
+      headers.set('PRIVATE-TOKEN', requireBinding(env.GITLAB_ACCESS_TOKEN, 'GITLAB_ACCESS_TOKEN'))
 
       return proxyRequest(request, 'https://gitlab.com/api/v4', '/api/gitlab', headers)
     }
 
     if (url.pathname.startsWith('/api/wakatime')) {
       const headers = new Headers(request.headers)
-      headers.set('Authorization', `Basic ${encodeBase64(`${env.WAKATIME_API_KEY}:`)}`)
+      const wakatimeApiKey = requireBinding(env.WAKATIME_API_KEY, 'WAKATIME_API_KEY')
+      headers.set('Authorization', `Basic ${encodeBase64(`${wakatimeApiKey}:`)}`)
 
       return proxyRequest(request, 'https://wakatime.com/api/v1', '/api/wakatime', headers)
     }
