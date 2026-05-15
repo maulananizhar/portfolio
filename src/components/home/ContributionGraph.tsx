@@ -10,7 +10,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', '']
 
 function getIntensity(count: number): string {
-  if (count === 0) return 'bg-[#1e1e2e] dark:bg-[#1e1e2e]'
+  if (count === 0) return 'bg-surface-alt'
   if (count <= 2) return 'bg-accent-subtle'
   if (count <= 5) return 'bg-accent-dim'
   if (count <= 10) return 'bg-accent/60'
@@ -141,7 +141,7 @@ export default function ContributionGraph({ data }: Props) {
 
       <div className="flex items-center gap-1.5 mt-4 justify-end">
         <span className="text-[10px] text-text-secondary">Less</span>
-        <div className="w-3 h-3 rounded-sm bg-[#1e1e2e] dark:bg-[#1e1e2e]" />
+        <div className="w-3 h-3 rounded-sm bg-surface-alt" />
         <div className="w-3 h-3 rounded-sm bg-accent-subtle" />
         <div className="w-3 h-3 rounded-sm bg-accent-dim" />
         <div className="w-3 h-3 rounded-sm bg-accent/60" />
