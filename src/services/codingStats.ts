@@ -35,10 +35,11 @@ async function fetchGitLabUser(): Promise<GitLabUser> {
   return data[0]
 }
 
-async function fetchGitLabEvents(userId: number, after: string): Promise<GitLabEvent[]> {
-  const first = await api.get(`/api/gitlab/users/${userId}/events`, {
-    params: { action: 'pushed', per_page: 100, page: 1, after },
-  })
+async function fetchGitLabEvents(userId: number, after: string, before?: string): Promise<GitLabEvent[]> {
+  const params: Record<string, string | number> = { action: 'pushed', per_page: 100, page: 1, after }
+  if (before) params.before = before
+
+  const first = await api.get(`/api/gitlab/users/${userId}/events`, { params })
 
   const totalPages = parseInt(first.headers['x-total-pages'] || '1')
   const events: GitLabEvent[] = [...first.data]
@@ -48,7 +49,7 @@ async function fetchGitLabEvents(userId: number, after: string): Promise<GitLabE
     const remaining = await Promise.all(
       pages.map(page =>
         api.get(`/api/gitlab/users/${userId}/events`, {
-          params: { action: 'pushed', per_page: 100, page, after },
+          params: { ...params, page },
         })
       )
     )
@@ -165,4 +166,44 @@ export async function fetchCodingStats(): Promise<CodingStatsResult> {
     .sort((a, b) => a.date.localeCompare(b.date))
 
   return result
+}
+
+export async function fetchContributions(yearOffset: number): Promise<ContributionDay[]> {
+  const now = new Date()
+  const endDate = new Date(now)
+  endDate.setFullYear(endDate.getFullYear() + yearOffset)
+
+  const startDate = new Date(endDate)
+  startDate.setDate(startDate.getDate() - 364)
+  const after = startDate.toISOString().split('T')[0]
+  const until = endDate.toISOString().split('T')[0]
+
+  const dailyMap = new Map<string, number>()
+
+  try {
+    const user = await fetchGitLabUser()
+    const events = await fetchGitLabEvents(user.id, after, until)
+
+    for (const event of events) {
+      const date = event.created_at?.split('T')[0]
+      if (date) {
+        dailyMap.set(date, (dailyMap.get(date) || 0) + 1)
+      }
+    }
+  } catch {
+    // GitLab API failed
+  }
+
+  try {
+    const ghDays = await fetchGitHubContributions(after, until)
+    for (const day of ghDays) {
+      dailyMap.set(day.date, (dailyMap.get(day.date) || 0) + day.contributionCount)
+    }
+  } catch {
+    // GitHub API failed
+  }
+
+  return Array.from(dailyMap.entries())
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date))
 }
