@@ -1,59 +1,62 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
-import mdx from '@mdx-js/rollup'
-import tailwindcss from '@tailwindcss/vite'
-import rehypeShiki from '@shikijs/rehype'
+import { defineConfig, loadEnv } from "vite";
+import react from "@vitejs/plugin-react";
+import mdx from "@mdx-js/rollup";
+import tailwindcss from "@tailwindcss/vite";
+import rehypeShiki from "@shikijs/rehype";
 
 import { cloudflare } from "@cloudflare/vite-plugin";
 
 function toBase64(str: string): string {
-  return Buffer.from(str).toString('base64')
+  return Buffer.from(str).toString("base64");
 }
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
+  const env = loadEnv(mode, process.cwd(), "");
 
   return {
-    plugins: [{
-      enforce: 'pre',
-      ...mdx({
-        rehypePlugins: [
-          [rehypeShiki, { theme: 'github-dark' }],
-        ],
-      }),
-    }, react({ include: /\.(mdx|tsx|ts|js)$/ }), tailwindcss(), cloudflare()],
+    plugins: [
+      {
+        enforce: "pre",
+        ...mdx({
+          rehypePlugins: [[rehypeShiki, { theme: "github-dark" }]],
+        }),
+      },
+      react({ include: /\.(mdx|tsx|ts|js)$/ }),
+      tailwindcss(),
+      cloudflare(),
+    ],
     server: {
       proxy: {
-        '/api/gitlab': {
-          target: 'https://gitlab.com/api/v4',
+        "/api/gitlab": {
+          target: "https://gitlab.com/api/v4",
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/gitlab/, ''),
+          rewrite: path => path.replace(/^\/api\/gitlab/, ""),
           headers: {
-            'PRIVATE-TOKEN': env.GITLAB_ACCESS_TOKEN,
+            "PRIVATE-TOKEN": env.GITLAB_ACCESS_TOKEN,
           },
         },
-        '/api/wakatime': {
-          target: 'https://wakatime.com/api/v1',
+        "/api/wakatime": {
+          target: "https://wakatime.com/api/v1",
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/wakatime/, ''),
+          rewrite: path => path.replace(/^\/api\/wakatime/, ""),
           headers: {
-            'Authorization': `Basic ${toBase64(`${env.WAKATIME_API_KEY}:`)}`,
+            Authorization: `Basic ${toBase64(`${env.WAKATIME_API_KEY}:`)}`,
           },
         },
-        '/api/github': {
-          target: 'https://api.github.com',
+        "/api/github": {
+          target: "https://api.github.com",
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/github/, ''),
+          rewrite: path => path.replace(/^\/api\/github/, ""),
           headers: {
-            'Authorization': `Bearer ${env.GITHUB_ACCESS_TOKEN}`,
+            Authorization: `Bearer ${env.GH_ACCESS_TOKEN}`,
           },
         },
-        '/api/discord': {
+        "/api/discord": {
           target: `https://api.lanyard.rest/v1/users/${env.VITE_DISCORD_USER_ID}`,
           changeOrigin: true,
-          rewrite: () => '',
+          rewrite: () => "",
         },
       },
     },
   };
-})
+});

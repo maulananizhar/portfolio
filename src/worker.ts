@@ -2,7 +2,7 @@ interface Env {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
-  GITHUB_ACCESS_TOKEN: string;
+  GH_ACCESS_TOKEN: string;
   GITLAB_ACCESS_TOKEN: string;
   WAKATIME_API_KEY: string;
   VITE_DISCORD_USER_ID: string;
@@ -80,8 +80,8 @@ export default {
 
     if (url.pathname.startsWith("/api/github")) {
       const headers = new Headers(request.headers);
-      const githubToken = requireBinding(env.GITHUB_ACCESS_TOKEN);
-      if (!githubToken) return missingBindingResponse("GITHUB_ACCESS_TOKEN");
+      const githubToken = requireBinding(env.GH_ACCESS_TOKEN);
+      if (!githubToken) return missingBindingResponse("GH_ACCESS_TOKEN");
 
       headers.set("Authorization", `Bearer ${githubToken}`);
       headers.set("User-Agent", "portfolio");
