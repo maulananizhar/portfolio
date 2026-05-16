@@ -48,6 +48,11 @@ export default defineConfig(({ mode }) => {
             'Authorization': `Bearer ${env.GITHUB_ACCESS_TOKEN}`,
           },
         },
+        '/api/discord': {
+          target: `https://api.lanyard.rest/v1/users/${env.VITE_DISCORD_USER_ID}`,
+          changeOrigin: true,
+          rewrite: () => '',
+        },
       },
     },
   };

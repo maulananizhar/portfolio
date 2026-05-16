@@ -42,10 +42,8 @@ export interface DiscordPresence {
   activity: Activity | null
 }
 
-export async function fetchDiscordPresence(userId: string): Promise<DiscordPresence> {
-  const { data } = await axios.get<LanyardResponse>(
-    `https://api.lanyard.rest/v1/users/${userId}`,
-  )
+export async function fetchDiscordPresence(): Promise<DiscordPresence> {
+  const { data } = await axios.get<LanyardResponse>('/api/discord')
 
   const d = data.data
   const nonSpotifyActivity = d.activities?.find(a => a.name !== 'Spotify' && a.type === 0)

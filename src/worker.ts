@@ -5,6 +5,7 @@ interface Env {
   GITHUB_ACCESS_TOKEN: string
   GITLAB_ACCESS_TOKEN: string
   WAKATIME_API_KEY: string
+  DISCORD_USER_ID: string
 }
 
 function encodeBase64(value: string): string {
@@ -97,6 +98,14 @@ export default {
       headers.set('Authorization', `Basic ${encodeBase64(`${wakatimeApiKey}:`)}`)
 
       return proxyRequest(request, 'https://wakatime.com/api/v1', '/api/wakatime', headers)
+    }
+
+    if (url.pathname === '/api/discord') {
+      const discordUserId = requireBinding(env.DISCORD_USER_ID)
+      if (!discordUserId) return missingBindingResponse('DISCORD_USER_ID')
+
+      const upstream = `https://api.lanyard.rest/v1/users/${discordUserId}`
+      return fetch(upstream)
     }
 
     return env.ASSETS.fetch(request)
