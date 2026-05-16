@@ -22,7 +22,14 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.0.0",
-    "@rollup/rollup-linux-x64-musl": "^4.0.0"
+    "@rollup/rollup-linux-x64-musl": "^4.0.0",
+    "lightningcss-linux-x64-gnu": "^1.0.0",
+    "lightningcss-linux-x64-musl": "^1.0.0",
+    "@esbuild/linux-x64": "^0.25.0",
+    "@img/sharp-linux-x64": "^0.34.0",
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.0.0",
+    "@tailwindcss/oxide-linux-x64-musl": "^4.0.0",
+    "@cloudflare/workerd-linux-64": "^1.0.0"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.37.1",
