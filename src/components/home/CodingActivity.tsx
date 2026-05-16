@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import Card from '../ui/Card'
 import StatusDot from '../ui/StatusDot'
 import SectionHeading from '../ui/SectionHeading'
 import ContributionGraph from './ContributionGraph'
 import { useCodingStats } from '../../hooks/useCodingStats'
+import { useContributions } from '../../hooks/useContributions'
 
 const skeleton = [
   { label: 'Coding Hours', w: 'w-20' },
@@ -12,7 +14,9 @@ const skeleton = [
 ]
 
 export default function CodingActivity() {
-  const { codingHours, commits, topLanguage, currentFocus, contributions, loading } = useCodingStats()
+  const [yearOffset, setYearOffset] = useState(0)
+  const { codingHours, commits, topLanguage, currentFocus, loading } = useCodingStats()
+  const { contributions, loading: contribsLoading } = useContributions(yearOffset)
 
   const activities = [
     { label: 'Coding Hours', value: codingHours, subtitle: 'This year (WakaTime)' },
@@ -44,7 +48,13 @@ export default function CodingActivity() {
               </Card>
             ))}
       </div>
-      {!loading && contributions.length > 0 && <ContributionGraph data={contributions} />}
+      {!contribsLoading && contributions.length > 0 && (
+        <ContributionGraph
+          data={contributions}
+          yearOffset={yearOffset}
+          onYearChange={setYearOffset}
+        />
+      )}
     </section>
   )
 }
