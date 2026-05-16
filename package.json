@@ -20,6 +20,10 @@
     "react-router-dom": "^7.0.0",
     "shiki": "^4.0.2"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.0.0",
+    "@rollup/rollup-linux-x64-musl": "^4.0.0"
+  },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.37.1",
     "@mdx-js/rollup": "^3.0.0",
