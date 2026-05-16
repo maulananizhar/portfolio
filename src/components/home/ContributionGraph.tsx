@@ -99,7 +99,7 @@ export default function ContributionGraph({ data, yearOffset, onYearChange }: Pr
   }
 
   return (
-    <Card className="p-4 sm:p-6 overflow-x-auto">
+    <Card className="p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="text-[10px] tracking-[0.2em] uppercase text-text-secondary">Contribution Calendar</span>
@@ -124,62 +124,69 @@ export default function ContributionGraph({ data, yearOffset, onYearChange }: Pr
         </div>
       </div>
 
-      <div
-        className="grid"
-        style={{
-          gridTemplateColumns: `28px repeat(${weeks.length}, minmax(0, 1fr))`,
-          gap: 3,
-        }}
-      >
-        {(() => {
-          let col = 2
-          return monthLabels.map((m) => {
-            const span = col
-            col += m.weekCount
-            return (
+      <div className="overflow-x-auto pb-1">
+        <div className="flex">
+          <div className="flex flex-col shrink-0 sticky left-0 z-10 bg-surface" style={{ width: 28, marginRight: 3 }}>
+            <div className="h-[13px]" />
+            {DAY_LABELS.map((label, i) => (
               <div
-                key={m.label}
-                className="text-[10px] text-text-secondary truncate pl-0.5"
-                style={{ gridColumn: `${span} / span ${m.weekCount}` }}
+                key={label || `day-${i}`}
+                className="text-[10px] text-text-secondary flex items-center leading-none flex-1"
               >
-                {m.label}
+                {label}
               </div>
-            )
-          })
-        })()}
-
-        {DAY_LABELS.map((label, i) => (
-          <div
-            key={label || `day-${i}`}
-            className="text-[10px] text-text-secondary flex items-center leading-none"
-            style={{ gridRowStart: i + 2, gridColumn: 1 }}
-          >
-            {label}
+            ))}
           </div>
-        ))}
+          <div className="min-w-0 flex-1 pr-4 sm:pr-6">
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: `repeat(${weeks.length}, minmax(12px, 1fr))`,
+                gap: 3,
+              }}
+            >
+              {(() => {
+                let col = 1
+                return monthLabels.map((m) => {
+                  const span = col
+                  col += m.weekCount
+                  return (
+                    <div
+                      key={m.label}
+                      className="text-[10px] text-text-secondary truncate pl-0.5"
+                      style={{ gridColumn: `${span} / span ${m.weekCount}` }}
+                    >
+                      {m.label}
+                    </div>
+                  )
+                })
+              })()}
 
-        {weeks.map((week, wi) =>
-          week.map((day, di) => {
-            const hasLabel = !!labels[day.date]
-            return (
-              <div
-                key={day.date}
-                className={`aspect-square rounded-sm ${getIntensity(day.count)} cursor-default relative`}
-                style={{ gridRowStart: di + 2, gridColumnStart: wi + 2 }}
-                onMouseEnter={(e) => handleMouseEnter(day, e)}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
-              >
-                {hasLabel && (
-                  <Star
-                    className="absolute inset-0 w-full h-full p-[1px] text-accent"
-                    fill="currentColor"
-                  />
-                )}
-              </div>
-            )
-          })
-        )}
+              {weeks.map((week, wi) =>
+                week.map((day, di) => {
+                  const hasLabel = !!labels[day.date]
+                  return (
+                    <div
+                      key={day.date}
+                      className={`aspect-square rounded-sm ${getIntensity(day.count)} cursor-default relative`}
+                      style={{ gridRowStart: di + 2, gridColumnStart: wi + 1 }}
+                      onMouseEnter={(e) => handleMouseEnter(day, e)}
+                      onMouseMove={handleMouseMove}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      {hasLabel && (
+                        <Star
+                          className="absolute inset-0 w-full h-full p-[1px] text-accent"
+                          fill="currentColor"
+                        />
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-1.5 mt-4 justify-end">
