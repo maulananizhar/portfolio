@@ -22,7 +22,7 @@ export default function CodingActivity() {
     { label: 'Coding Hours', value: codingHours, subtitle: 'This year (WakaTime)' },
     { label: 'Commits', value: commits, subtitle: 'Last 12 months (GitLab + GitHub)' },
     { label: 'Top Language', value: topLanguage, subtitle: 'Most used language' },
-    { label: 'Current Focus', value: currentFocus, subtitle: 'Active project' },
+    { label: 'Current Focus', value: currentFocus, subtitle: 'Most active (7 days)' },
   ] as const
 
   return (

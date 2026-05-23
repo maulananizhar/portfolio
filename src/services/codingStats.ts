@@ -98,8 +98,13 @@ async function fetchGitHubContributions(since: string, until: string): Promise<G
   return weeks.flatMap(w => w.contributionDays)
 }
 
-async function fetchWakaTime() {
+async function fetchWakaTimeYearly() {
   const { data } = await api.get('/api/wakatime/users/current/stats/last_year')
+  return data.data
+}
+
+async function fetchWakaTimeLast7Days() {
+  const { data } = await api.get('/api/wakatime/users/current/stats/last_7_days')
   return data.data
 }
 
@@ -117,17 +122,21 @@ export async function fetchCodingStats(): Promise<CodingStatsResult> {
   const after = oneYearAgo.toISOString().split('T')[0]
 
   try {
-    const waka = await fetchWakaTime()
-    if (waka?.human_readable_total) {
-      result.codingHours = waka.human_readable_total
+    const [yearly, weekly] = await Promise.allSettled([
+      fetchWakaTimeYearly(),
+      fetchWakaTimeLast7Days(),
+    ])
+
+    if (yearly.status === 'fulfilled' && yearly.value?.human_readable_total) {
+      result.codingHours = yearly.value.human_readable_total
         .replace(/ hrs?/g, 'h')
         .replace(/ mins?/g, 'm')
     }
-    if (waka?.languages?.length) {
-      result.topLanguage = waka.languages[0].name
+    if (weekly.status === 'fulfilled' && weekly.value?.languages?.length) {
+      result.topLanguage = weekly.value.languages[0].name
     }
-    if (waka?.projects?.length) {
-      result.currentFocus = waka.projects[0].name
+    if (weekly.status === 'fulfilled' && weekly.value?.projects?.length) {
+      result.currentFocus = weekly.value.projects[0].name
     }
   } catch {
     // WakaTime not configured
