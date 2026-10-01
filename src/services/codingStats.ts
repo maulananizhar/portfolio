@@ -69,33 +69,48 @@ interface GitHubWeek {
 }
 
 async function fetchGitHubContributions(since: string, until: string): Promise<GitHubDay[]> {
-  const query = `
-    query($username: String!, $from: DateTime!, $to: DateTime!) {
-      user(login: $username) {
-        contributionsCollection(from: $from, to: $to, includePrivateContributions: true) {
-          contributionCalendar {
-            weeks {
-              contributionDays {
-                date
-                contributionCount
+  const fetchCalendar = async (includePrivateContributions: boolean): Promise<GitHubDay[]> => {
+    const query = `
+      query($username: String!, $from: DateTime!, $to: DateTime!) {
+        user(login: $username) {
+          contributionsCollection(
+            from: $from,
+            to: $to,
+            includePrivateContributions: ${includePrivateContributions}
+          ) {
+            contributionCalendar {
+              weeks {
+                contributionDays {
+                  date
+                  contributionCount
+                }
               }
             }
           }
         }
       }
-    }
-  `
-  const { data } = await api.post('/api/github/graphql', {
-    query,
-    variables: {
-      username: GITHUB_USERNAME,
-      from: `${since}T00:00:00Z`,
-      to: `${until}T23:59:59Z`,
-    },
-  })
+    `
+    const { data } = await api.post('/api/github/graphql', {
+      query,
+      variables: {
+        username: GITHUB_USERNAME,
+        from: `${since}T00:00:00Z`,
+        to: `${until}T23:59:59Z`,
+      },
+    })
 
-  const weeks: GitHubWeek[] = data?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || []
-  return weeks.flatMap(w => w.contributionDays)
+    if (data?.errors?.length) throw new Error('GitHub contributions query failed')
+    const weeks: GitHubWeek[] = data?.data?.user?.contributionsCollection?.contributionCalendar?.weeks
+    if (!weeks) throw new Error('GitHub contribution calendar is unavailable')
+    return weeks.flatMap(w => w.contributionDays)
+  }
+
+  try {
+    return await fetchCalendar(true)
+  } catch {
+    // If the token cannot access private contribution data, retain public contributions.
+    return fetchCalendar(false)
+  }
 }
 
 async function fetchWakaTimeYearly() {
