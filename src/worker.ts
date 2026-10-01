@@ -30,6 +30,128 @@ function missingBindingResponse(name: string): Response {
   );
 }
 
+interface GitHubRepo {
+  full_name: string
+  private: boolean
+}
+
+interface GitHubCommit {
+  commit?: { author?: { date?: string }; committer?: { date?: string } }
+}
+
+function getNextPage(response: Response): string | null {
+  const link = response.headers.get("Link")
+  const next = link?.split(",").find(part => /rel="next"/.test(part))
+  return next?.match(/<([^>]+)>/)?.[1] || null
+}
+
+async function fetchGitHubProfileContributions(
+  request: Request,
+  token: string,
+): Promise<Response> {
+  const requestUrl = new URL(request.url)
+  const from = requestUrl.searchParams.get("from")
+  const to = requestUrl.searchParams.get("to")
+  const validDate = (value: string | null): value is string =>
+    !!value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`))
+
+  if (!validDate(from) || !validDate(to) || from > to) {
+    return Response.json({ error: "Valid from and to dates are required" }, { status: 400 })
+  }
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "User-Agent": "portfolio",
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  }
+  const query = `query($username: String!, $from: DateTime!, $to: DateTime!) {
+    user(login: $username) {
+      contributionsCollection(from: $from, to: $to) {
+        contributionCalendar {
+          weeks { contributionDays { date contributionCount } }
+        }
+      }
+    }
+  }`
+  const graphResponse = await fetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query,
+      variables: {
+        username: "maulananizhar",
+        from: `${from}T00:00:00Z`,
+        to: `${to}T23:59:59Z`,
+      },
+    }),
+  })
+  if (!graphResponse.ok) {
+    return Response.json({ error: "Unable to load GitHub contributions" }, { status: graphResponse.status })
+  }
+  const graphData = await graphResponse.json() as {
+    errors?: unknown[]
+    data?: { user?: { contributionsCollection?: { contributionCalendar?: { weeks?: Array<{ contributionDays: Array<{ date: string; contributionCount: number }> }> } } } }
+  }
+  const weeks = graphData.data?.user?.contributionsCollection?.contributionCalendar?.weeks
+  if (graphData.errors?.length || !weeks) {
+    return Response.json({ error: "GitHub contribution calendar is unavailable" }, { status: 502 })
+  }
+
+  const dayCounts = new Map<string, number>()
+  for (const week of weeks) {
+    for (const day of week.contributionDays) dayCounts.set(day.date, day.contributionCount)
+  }
+
+  // GraphQL's contributionCalendar does not expose a private-inclusion argument.
+  // Use the authenticated REST API to add commits from private repos the token can access.
+  try {
+    let reposUrl: string | null = "https://api.github.com/user/repos?visibility=private&affiliation=owner,collaborator,organization_member&per_page=100"
+    const privateRepos: GitHubRepo[] = []
+    let repoPage = 0
+    while (reposUrl && repoPage < 10) {
+      const reposResponse = await fetch(reposUrl, { headers })
+      if (!reposResponse.ok) break
+      privateRepos.push(...(await reposResponse.json() as GitHubRepo[]).filter(repo => repo.private))
+      reposUrl = getNextPage(reposResponse)
+      repoPage++
+    }
+    if (privateRepos.length) {
+      for (let index = 0; index < privateRepos.length; index += 5) {
+        await Promise.all(privateRepos.slice(index, index + 5).map(async repo => {
+          const commitsUrl = new URL(`https://api.github.com/repos/${repo.full_name}/commits`)
+          commitsUrl.searchParams.set("author", "maulananizhar")
+          commitsUrl.searchParams.set("since", `${from}T00:00:00Z`)
+          commitsUrl.searchParams.set("until", `${to}T23:59:59Z`)
+          commitsUrl.searchParams.set("per_page", "100")
+
+          let nextUrl: string | null = commitsUrl.toString()
+          let page = 0
+          while (nextUrl && page < 10) {
+            const commitsResponse = await fetch(nextUrl, { headers })
+            if (!commitsResponse.ok) break
+            const commits = await commitsResponse.json() as GitHubCommit[]
+            for (const commit of commits) {
+              const date = (commit.commit?.author?.date || commit.commit?.committer?.date)?.slice(0, 10)
+              if (date) dayCounts.set(date, (dayCounts.get(date) || 0) + 1)
+            }
+            nextUrl = getNextPage(commitsResponse)
+            page++
+          }
+        }))
+      }
+    }
+  } catch {
+    // Keep the public contribution calendar if private-repository access is unavailable.
+  }
+
+  return Response.json(
+    Array.from(dayCounts, ([date, contributionCount]) => ({ date, contributionCount }))
+      .sort((a, b) => a.date.localeCompare(b.date)),
+    { headers: { "Cache-Control": "public, max-age=1800" } },
+  )
+}
+
 function createUpstreamRequest(
   request: Request,
   upstreamUrl: URL,
@@ -77,6 +199,12 @@ async function proxyRequest(
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === "/api/gh-calendar") {
+      const githubToken = requireBinding(env.GH_ACCESS_TOKEN);
+      if (!githubToken) return missingBindingResponse("GH_ACCESS_TOKEN");
+      return fetchGitHubProfileContributions(request, githubToken);
+    }
 
     if (url.pathname.startsWith("/api/github")) {
       const headers = new Headers(request.headers);

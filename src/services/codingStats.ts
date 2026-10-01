@@ -2,7 +2,6 @@ import api from '../lib/api'
 import type { ContributionDay } from '../types'
 
 const GITLAB_USERNAME = 'maulananizhar'
-const GITHUB_USERNAME = 'maulananizhar'
 
 export interface CodingStatsResult {
   codingHours: string
@@ -64,40 +63,11 @@ interface GitHubDay {
   contributionCount: number
 }
 
-interface GitHubWeek {
-  contributionDays: GitHubDay[]
-}
-
 async function fetchGitHubContributions(since: string, until: string): Promise<GitHubDay[]> {
-  const query = `
-    query($username: String!, $from: DateTime!, $to: DateTime!) {
-      user(login: $username) {
-        contributionsCollection(from: $from, to: $to) {
-          contributionCalendar {
-            weeks {
-              contributionDays {
-                date
-                contributionCount
-              }
-            }
-          }
-        }
-      }
-    }
-  `
-  const { data } = await api.post('/api/github/graphql', {
-    query,
-    variables: {
-      username: GITHUB_USERNAME,
-      from: `${since}T00:00:00Z`,
-      to: `${until}T23:59:59Z`,
-    },
+  const { data } = await api.get('/api/gh-calendar', {
+    params: { from: since, to: until },
   })
-
-  if (data?.errors?.length) throw new Error('GitHub contributions query failed')
-  const weeks: GitHubWeek[] = data?.data?.user?.contributionsCollection?.contributionCalendar?.weeks
-  if (!weeks) throw new Error('GitHub contribution calendar is unavailable')
-  return weeks.flatMap(w => w.contributionDays)
+  return data
 }
 
 async function fetchWakaTimeYearly() {
